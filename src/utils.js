@@ -57,4 +57,19 @@ function loadTemplate(template, filename) {
     return { render };
 }
 
-module.exports = { cp, loadTemplate };
+function findFile(cwd, filename) {
+    // Base case if directory passed in is the root
+    // eg. win32 - C:\\
+    // eg. posix - /
+    if(cwd == path.parse(cwd).root)
+        return undefined;
+
+    const files = fs.readdirSync(cwd);
+    const filepath = files.find((file) => path.basename(file) === filename)
+    if(filepath)
+        return cwd;
+
+    return findFile(path.join(cwd, '..'), filename);
+}
+
+module.exports = { cp, loadTemplate, findFile };

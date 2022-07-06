@@ -8,4 +8,4 @@ workspace "<%- appName %>"
 
 outputdir "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-include "<%- appName %>/<%- appName %>"
+include "<%- appName %>"

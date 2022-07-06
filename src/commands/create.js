@@ -58,15 +58,6 @@ async function scaffoldWorkspace(appName, template) {
     const WORKSPACE_DIR = path.join(process.cwd(), appName);
     const PROJECT_DIR = path.join(WORKSPACE_DIR, appName);
 
-    // This only works for premake
-    let kind;
-    switch (template.kind) {
-        case 'Console': kind = 'ConsoleApp'; break;
-        case 'Dynamic': kind = 'SharedLib'; break;
-        case 'Static': kind = 'StaticApp'; break;
-        default: break;
-    }
-
     const cpgjson = {
         name: appName,
         buildSystem: template.buildSystem,
@@ -78,7 +69,7 @@ async function scaffoldWorkspace(appName, template) {
             name: appName,
             dir: appName,
             language: template.language,
-            kind: kind
+            kind: templatekind
         }
     }
 
@@ -112,6 +103,14 @@ async function scaffoldWorkspace(appName, template) {
         if (template.buildSystem == 'Premake') {
             const premake5Workspace = loadTemplate('premake', 'premake5-workspace.lua');
             fs.writeFile(path.join(WORKSPACE_DIR, 'premake5.lua'), premake5Workspace.render({ appName }));
+
+            let kind;
+            switch (template.kind) {
+                case 'Console': kind = 'ConsoleApp'; break;
+                case 'Dynamic': kind = 'SharedLib'; break;
+                case 'Static': kind = 'StaticApp'; break;
+                default: break;
+            }
 
             if (!template.bare) {
                 const premake5Project = loadTemplate('premake', 'premake5-project.lua');

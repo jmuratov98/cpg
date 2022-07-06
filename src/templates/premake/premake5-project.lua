@@ -8,11 +8,13 @@ project "<%- appName %>"
 	targetdir	("bin/" .. outputdir .. "/%{prj.name}")
 	objdir		("bin-obj/" .. outputdir .. "/%{prj.name}")
 
-	pchheader "pch.h"
-	pchsource "<%- appName %>/src/pch.cpp"
-
 	files {
+		<% if(language == "C++") { %>
 		"%{prj.name}/src/**.cpp",
+		<% } else if(language == "C") { %>
+		"%{prj.name}/src/**.c",
+		<% } %>
+		"%{prj.name}/src/**.h",
 		"%{prj.name}/include/**.h",
 	}
 
