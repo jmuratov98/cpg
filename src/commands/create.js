@@ -1,9 +1,6 @@
 const { createCommand } = require('commander');
 const { prompt } = require('inquirer');
-const { cp, loadTemplate } = require('../utils')
-const path = require('path');
-const fs = require('fs/promises');
-const simpleGit = require('simple-git');
+const WorkspaceGenerator = require('../generators/workspace');
 
 async function promptOptions(opts) {
     const questions = [];
@@ -54,116 +51,15 @@ async function promptOptions(opts) {
     }
 }
 
-async function scaffoldWorkspace(appName, template) {
-    const WORKSPACE_DIR = path.join(process.cwd(), appName);
-    const PROJECT_DIR = path.join(WORKSPACE_DIR, appName);
-
-    const cpgjson = {
-        name: appName,
-        buildSystem: template.buildSystem,
-        projects: []
-    };
-
-    if (!template.bare) {
-        cpgjson.projects[0] = {
-            name: appName,
-            dir: appName,
-            language: template.language,
-            kind: templatekind
-        }
-    }
-
-    try {
-        // Creating the project and workspace directory
-        await fs.mkdir(WORKSPACE_DIR, { recursive: true });
-
-        // Creating the cpg.json file
-        await fs.writeFile(
-            path.join(WORKSPACE_DIR, 'cpg.json'),
-            JSON.stringify(cpgjson, null, 2)
-        );
-
-        let lang = '';
-        switch (template.language) {
-            case 'C++': lang = 'cpp'; break;
-            case 'C': lang = 'c'; break;
-            default: break;
-        }
-
-        if (!template.bare) {
-            await fs.mkdir(PROJECT_DIR, { recursive: true });
-
-            cp(
-                path.join(__dirname, '../templates/', lang),
-                PROJECT_DIR,
-            )
-        }
-
-        // Build System
-        if (template.buildSystem == 'Premake') {
-            const premake5Workspace = loadTemplate('premake', 'premake5-workspace.lua');
-            fs.writeFile(path.join(WORKSPACE_DIR, 'premake5.lua'), premake5Workspace.render({ appName }));
-
-            let kind;
-            switch (template.kind) {
-                case 'Console': kind = 'ConsoleApp'; break;
-                case 'Dynamic': kind = 'SharedLib'; break;
-                case 'Static': kind = 'StaticApp'; break;
-                default: break;
-            }
-
-            if (!template.bare) {
-                const premake5Project = loadTemplate('premake', 'premake5-project.lua');
-                fs.writeFile(path.join(PROJECT_DIR, 'premake5.lua'), premake5Project.render({ appName, language: template.language, kind: kind }));
-            }
-
-            // Copy premake5.exe
-            await fs.mkdir(
-                path.join(WORKSPACE_DIR, 'lib/premake5/bin'),
-                { recursive: true }
-            );
-
-            await fs.copyFile(
-                path.join(__dirname, '../templates/premake/premake5.exe'),
-                path.join(WORKSPACE_DIR, 'lib/premake5/bin/premake5.exe')
-            );
-
-            // gen_project.bat
-            await fs.mkdir(
-                path.join(WORKSPACE_DIR, 'scripts'),
-                { recursive: true }
-            );
-
-            await fs.copyFile(
-                path.join(__dirname, '../templates/premake/gen_project.bat'),
-                path.join(WORKSPACE_DIR, 'scripts/gen_project.bat')
-            );
-        }
-
-
-    } catch (e) {
-        console.error(e);
-    }
-
-}
-
 async function handleAction(appName, opts) {
     try {
-        const template = await promptOptions(opts);
+        const template = await promptOptions(opts)
+        const generator = new WorkspaceGenerator(appName, template);
 
-        await scaffoldWorkspace(appName, template);
+        generator.generate();
 
-        if (template.git) {
-            const git = simpleGit({
-                baseDir: path.join(process.cwd(), appName)
-            });
-
-            await git.init();
-            await git.add('-A');
-            await git.commit('Initial Commit');
-        }
     } catch (e) {
-        console.error(e);
+        console.trace(e);
     }
 
 }

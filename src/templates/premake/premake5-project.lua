@@ -1,29 +1,28 @@
 project "<%- appName %>"
-	location "<%- appName %>"
 	kind "<%- kind %>"
 	language "<%- language %>"
 	cppdialect "<%- language %>17"
 	staticruntime "on"
 
-	targetdir	("bin/" .. outputdir .. "/%{prj.name}")
-	objdir		("bin-obj/" .. outputdir .. "/%{prj.name}")
+	targetdir	("%{wks.location}/bin/" .. outputdir)
+	objdir		("%{wks.location}/bin-obj/" .. outputdir .. "/%{prj.name}")
 
 	files {
 		<% if(language == "C++") { %>
-		"%{prj.name}/src/**.cpp",
+		"src/**.cpp",
 		<% } else if(language == "C") { %>
-		"%{prj.name}/src/**.c",
+		"src/**.c",
 		<% } %>
-		"%{prj.name}/src/**.h",
-		"%{prj.name}/include/**.h",
+		"src/**.h",
+		"include/**.h",
 	}
 
 	defines {
 	}
 
 	includedirs {
-		"%{prj.name}/include",
-		"%{prj.name}/src",
+		"include",
+		"src",
 	}
 
 	links {
